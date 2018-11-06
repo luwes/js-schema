@@ -21,6 +21,9 @@
     "type": "git",
     "url": "git@github.com:molnarg/js-schema.git"
   },
+  "scripts": {
+    "test": "vows test/**/* --spec"
+  },
   "devDependencies": {
     "browserify": "*",
     "uglify-js": "*",
