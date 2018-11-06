@@ -5,7 +5,8 @@ js-schema is a new way of describing object schemas in JavaScript. It has a clea
 and it is capable of serializing to/from the popular JSON Schema format. The typical use case is
 declarative object validation.
 
-**Latest release**: 1.0.1 (2015/05/06)
+**This is a fork**: Started 2018/11/05
+**Latest upstream release**: 1.0.1 (2015/05/06)
 
 Features
 ========
@@ -69,7 +70,7 @@ Usage
 =====
 
 Include js-schema in your project with `var schema = require('js-schema');` in node.js or with
-`<script src="js-schema.min.js"></script>` in the browser. AMD module loading is also supported.
+`<script src="js-schema.min.js"></script>` in the browser.
 
 The first parameter passed to the `schema` function describes the schema, and the return value
 is a new function called validator. Then the validator can be used to check any object against
@@ -267,10 +268,6 @@ Installation
 Using [npm](http://npmjs.org):
 
     npm install js-schema
-
-Using [bower](http://bower.io):
-
-    bower install js-schema
 
 Build
 =====
