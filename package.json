@@ -25,16 +25,17 @@
     "format": "prettier --write \"{lib,test}/**/*.js\"",
     "lint": "eslint lib",
     "pretest": "npm run lint",
-    "test": "vows test/**/* --spec",
+    "test": "ava",
     "preversion": "npm run test"
   },
   "devDependencies": {
+    "ava": "^1.0.0-rc.1",
     "browserify": "*",
     "eslint": "^5.8.0",
+    "esm": "^3.0.84",
     "prettier": "^1.14.3",
     "uglify-js": "*",
-    "underscore": "^1.7.0",
-    "vows": "^0.7.0"
+    "underscore": "^1.7.0"
   },
   "engines": {
     "node": "*"

@@ -1,4 +1,4 @@
-module.exports = function(input, errors, schema) {
+export default function(input, errors, schema) {
   input = input || {};
   return [
     '',
@@ -10,4 +10,4 @@ module.exports = function(input, errors, schema) {
     'Errors:',
     JSON.stringify(errors, null, 2)
   ].join('\n');
-};
+}
