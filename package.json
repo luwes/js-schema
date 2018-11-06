@@ -1,4 +1,8 @@
 {
+  "name": "mjs-schema",
+  "version": "1.1.0",
+  "description": "A simple and intuitive object validation library",
+  "license": "MIT",
   "author": "Gábor Molnár <gabor@molnar.es>",
   "contributors": [
     "Alan James",
@@ -6,9 +10,6 @@
     "Mikael Berg",
     "Alex Ivanov"
   ],
-  "name": "mjs-schema",
-  "version": "1.1.0",
-  "description": "A simple and intuitive object validation library",
   "keywords": [
     "json",
     "schema",
@@ -16,8 +17,12 @@
     "validation",
     "validator"
   ],
-  "license": "MIT",
   "main": "./index.js",
+  "files": [
+    "mjs-schema.min.js",
+    "mjs-schema.debug.js",
+    "src"
+  ],
   "homepage": "https://github.com/luwes/mjs-schema",
   "repository": {
     "type": "git",
@@ -29,7 +34,8 @@
     "pretest": "npm run lint",
     "test": "ava",
     "build": "./build.sh",
-    "preversion": "npm run test"
+    "prepare": "npm test",
+    "preversion": "npm test"
   },
   "devDependencies": {
     "ava": "^1.0.0-rc.1",
