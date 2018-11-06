@@ -2,6 +2,7 @@ mjs-schema
 ==========
 
 [![Build Status](https://travis-ci.org/luwes/mjs-schema.svg?branch=master)](https://travis-ci.org/luwes/mjs-schema)
+![](http://img.badgesize.io/luwes/mjs-schema/master/mjs-schema.min.js.svg?compression=gzip)
 
 mjs-schema is a new way of describing object schemas in JavaScript. It has a clean and simple syntax,
 and it is capable of serializing to/from the popular JSON Schema format. The typical use case is
