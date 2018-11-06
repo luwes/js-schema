@@ -22,8 +22,8 @@
     "url": "git@github.com:molnarg/js-schema.git"
   },
   "scripts": {
-    "format": "prettier --write \"{lib,test}/**/*.js\"",
-    "lint": "eslint lib",
+    "format": "prettier --write \"{src,test}/**/*.js\"",
+    "lint": "eslint src",
     "pretest": "npm run lint",
     "test": "ava",
     "build": "./build.sh",

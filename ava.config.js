@@ -3,7 +3,7 @@ export default {
       'test/**/*.js',
       '!test/printTestResult.js'
     ],
-    sources: ['lib/**/*.js'],
+    sources: ['src/**/*.js'],
     failWithoutAssertions: false,
     babel: false,
     compileEnhancements: false,

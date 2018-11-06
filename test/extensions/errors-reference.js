@@ -2,7 +2,7 @@ import test from 'ava';
 import assert from 'assert';
 // import printTestResult from '../printTestResult.js';
 import schema from '../../index.js';
-import ReferenceSchema from '../../lib/patterns/reference';
+import ReferenceSchema from '../../src/patterns/reference';
 
 // var generateTest = function(ref) {
 //   var sch = schema(new ReferenceSchema(ref));
