@@ -7,9 +7,9 @@ MIN="js-schema.min.js"
 
 if [ -f node_modules/browserify/bin/cmd.js ]
 then
-    BROWSERIFY='node_modules/browserify/bin/cmd.js'
+    ROLLUP='node_modules/rollup/bin/rollup'
 else
-    BROWSERIFY=browserify
+    ROLLUP=rollup
 fi
 
 if [ -f node_modules/uglify-js/bin/uglifyjs ]
@@ -20,5 +20,5 @@ else
 fi
 
 
-$BROWSERIFY index.js | sed 's|require("/index.js")|window.schema = require("/index.js")|g' > $DEBUG
+$ROLLUP index.js --file $DEBUG --format umd --name "schema"
 $UGLIFY $DEBUG >$MIN

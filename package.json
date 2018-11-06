@@ -26,14 +26,15 @@
     "lint": "eslint lib",
     "pretest": "npm run lint",
     "test": "ava",
+    "build": "./build.sh",
     "preversion": "npm run test"
   },
   "devDependencies": {
     "ava": "^1.0.0-rc.1",
-    "browserify": "*",
     "eslint": "^5.8.0",
     "esm": "^3.0.84",
     "prettier": "^1.14.3",
+    "rollup": "^0.67.0",
     "uglify-js": "*",
     "underscore": "^1.7.0"
   },
