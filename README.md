@@ -1,6 +1,8 @@
 js-schema
 =========
 
+[![Build Status](https://travis-ci.org/luwes/js-schema.svg?branch=master)](https://travis-ci.org/luwes/js-schema)
+
 js-schema is a new way of describing object schemas in JavaScript. It has a clean and simple syntax,
 and it is capable of serializing to/from the popular JSON Schema format. The typical use case is
 declarative object validation.
