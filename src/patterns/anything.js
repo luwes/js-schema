@@ -1,21 +1,19 @@
 import Schema from '../BaseSchema';
 
-var AnythingSchema = Schema.patterns.AnythingSchema = Schema.extend(
-  {
-    errors: function(instance) {
-      if (instance == null) return 'anything cannot be null';
+var AnythingSchema = (Schema.patterns.AnythingSchema = Schema.extend({
+  errors: function(instance) {
+    if (instance == null) return 'anything cannot be null';
 
-      return false;
-    },
-    validate: function(instance) {
-      return instance != null;
-    },
+    return false;
+  },
+  validate: function(instance) {
+    return instance != null;
+  },
 
-    toJSON: function() {
-      return { type: 'any' };
-    }
+  toJSON: function() {
+    return { type: 'any' };
   }
-);
+}));
 
 export default AnythingSchema;
 

@@ -1,7 +1,7 @@
 import Schema from '../BaseSchema';
 import EqualitySchema from '../patterns/equality';
 
-var OrSchema = Schema.patterns.OrSchema = Schema.extend({
+var OrSchema = (Schema.patterns.OrSchema = Schema.extend({
   initialize: function(schemas) {
     this.schemas = schemas;
   },
@@ -51,7 +51,7 @@ var OrSchema = Schema.patterns.OrSchema = Schema.extend({
 
     return json;
   })
-});
+}));
 
 export default OrSchema;
 

@@ -2,94 +2,92 @@ import Schema from '../BaseSchema';
 import EqualitySchema from '../patterns/equality';
 import { instance as anything } from '../patterns/anything';
 
-var ArraySchema = Schema.extensions.ArraySchema = Schema.extend(
-  {
-    initialize: function(itemSchema, max, min) {
-      this.itemSchema = itemSchema || anything;
-      this.min = min || 0;
-      this.max = max || Infinity;
-    },
-    errors: function(instance) {
-      // Instance must be an instance of Array
-      if (!(instance instanceof Array))
-        return instance + ' is not an instance of Array';
+var ArraySchema = (Schema.extensions.ArraySchema = Schema.extend({
+  initialize: function(itemSchema, max, min) {
+    this.itemSchema = itemSchema || anything;
+    this.min = min || 0;
+    this.max = max || Infinity;
+  },
+  errors: function(instance) {
+    // Instance must be an instance of Array
+    if (!(instance instanceof Array))
+      return instance + ' is not an instance of Array';
 
-      // Checking length
-      if (this.min === this.max) {
-        if (instance.length !== this.min)
-          return (
-            'Array length should be equal to ' +
-            this.min +
-            ' and is ' +
-            instance.length
-          );
-      } else {
-        if (this.min > 0 && instance.length < this.min)
-          return (
-            'Array length should not be less than ' +
-            this.min +
-            ' and is ' +
-            instance.length
-          );
-        if (this.max < Infinity && instance.length > this.max)
-          return (
-            'Array length should not be more than ' +
-            this.max +
-            ' and is ' +
-            instance.length
-          );
+    // Checking length
+    if (this.min === this.max) {
+      if (instance.length !== this.min)
+        return (
+          'Array length should be equal to ' +
+          this.min +
+          ' and is ' +
+          instance.length
+        );
+    } else {
+      if (this.min > 0 && instance.length < this.min)
+        return (
+          'Array length should not be less than ' +
+          this.min +
+          ' and is ' +
+          instance.length
+        );
+      if (this.max < Infinity && instance.length > this.max)
+        return (
+          'Array length should not be more than ' +
+          this.max +
+          ' and is ' +
+          instance.length
+        );
+    }
+
+    // Checking conformance to the given item schema
+    var results = {};
+    for (var i = 0; i < instance.length; i++) {
+      var errs = this.itemSchema.errors(instance[i]);
+      if (errs) {
+        results[i] = errs;
       }
+    }
+    var resultKeysArray = Object.keys(results);
+    if (resultKeysArray.length > 0) {
+      return results;
+    }
 
-      // Checking conformance to the given item schema
-      var results = {};
-      for (var i = 0; i < instance.length; i++) {
-        var errs = this.itemSchema.errors(instance[i]);
-        if (errs) {
-          results[i] = errs;
-        }
-      }
-      var resultKeysArray = Object.keys(results);
-      if (resultKeysArray.length > 0) {
-        return results;
-      }
+    return false;
+  },
+  validate: function(instance) {
+    // Instance must be an instance of Array
+    if (!(instance instanceof Array)) return false;
 
-      return false;
-    },
-    validate: function(instance) {
-      // Instance must be an instance of Array
-      if (!(instance instanceof Array)) return false;
+    // Checking length
+    if (this.min === this.max) {
+      if (instance.length !== this.min) return false;
+    } else {
+      if (this.min > 0 && instance.length < this.min) return false;
+      if (this.max < Infinity && instance.length > this.max) return false;
+    }
 
-      // Checking length
-      if (this.min === this.max) {
-        if (instance.length !== this.min) return false;
-      } else {
-        if (this.min > 0 && instance.length < this.min) return false;
-        if (this.max < Infinity && instance.length > this.max) return false;
-      }
+    // Checking conformance to the given item schema
+    for (var i = 0; i < instance.length; i++) {
+      if (!this.itemSchema.validate(instance[i])) return false;
+    }
 
-      // Checking conformance to the given item schema
-      for (var i = 0; i < instance.length; i++) {
-        if (!this.itemSchema.validate(instance[i])) return false;
-      }
+    return true;
+  },
 
-      return true;
-    },
+  toJSON: Schema.session(function() {
+    var json = Schema.prototype.toJSON.call(this, true);
 
-    toJSON: Schema.session(function() {
-      var json = Schema.prototype.toJSON.call(this, true);
+    if (json['$ref'] != null) return json;
 
-      if (json['$ref'] != null) return json;
+    json.type = 'array';
 
-      json.type = 'array';
+    if (this.min > 0) json.minItems = this.min;
+    if (this.max < Infinity) json.maxItems = this.max;
+    if (this.itemSchema !== anything) json.items = this.itemSchema.toJSON();
 
-      if (this.min > 0) json.minItems = this.min;
-      if (this.max < Infinity) json.maxItems = this.max;
-      if (this.itemSchema !== anything) json.items = this.itemSchema.toJSON();
-
-      return json;
-    })
-  }
-);
+    return json;
+  })
+}));
 
 export default ArraySchema;
 

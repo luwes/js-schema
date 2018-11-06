@@ -2,118 +2,48 @@ import Schema from '../BaseSchema';
 import { instance as anything } from './anything';
 import { instance as nothing } from './nothing';
 
-var ObjectSchema = Schema.patterns.ObjectSchema = Schema.extend(
-  {
-    initialize: function(properties, other) {
-      var self = this;
+var ObjectSchema = (Schema.patterns.ObjectSchema = Schema.extend({
+  initialize: function(properties, other) {
+    var self = this;
 
-      this.other = other || anything;
-      this.properties = properties || [];
+    this.other = other || anything;
+    this.properties = properties || [];
 
-      // Sorting properties into two groups
-      (this.stringProps = {}), (this.regexpProps = []);
-      this.properties.forEach(function(property) {
-        if (typeof property.key === 'string') {
-          self.stringProps[property.key] = property;
-        } else {
-          self.regexpProps.push(property);
-        }
-      });
-    },
-
-    errors: function(instance) {
-      var self = this;
-
-      if (instance == null) return instance + ' is not Object';
-
-      var error,
-        errors = {};
-
-      // Simple string properties
-      Object.keys(this.stringProps).forEach(function(key) {
-        if (key in instance) {
-          if ((error = self.stringProps[key].value.errors(instance[key]))) {
-            errors[key] = error;
-          }
-        } else if (
-          self.stringProps[key].min > 0 &&
-          self.stringProps[key].value.validate(instance[key])
-        ) {
-          errors[key] = 'key is not present in the object';
-        }
-      });
-
-      // Regexp and other properties
-      if (this.regexpProps.length || this.other !== anything) {
-        var checked;
-        var occurences = self.regexpProps.map(function() {
-          return 0;
-        });
-
-        for (var key in instance) {
-          // Checking the key against every key regexps
-          checked = false;
-          this.regexpProps.forEach(function(prop, index) {
-            if (prop.key.test(key)) {
-              occurences[index] += 1;
-              checked = true;
-              if ((error = prop.value.errors(instance[key]))) {
-                errors[key] = error;
-              }
-            }
-          });
-
-          // If the key is not matched by regexps and by simple string checks
-          // then check it against this.other
-          if (!checked && !(key in this.stringProps)) {
-            if ((error = this.other.errors(instance[key]))) {
-              errors[key] = error;
-            }
-          }
-        }
-
-        // Checking if regexps have the appropriate occurence number in the object
-        for (var i = 0; i < self.regexpProps.length; i++) {
-          var prop = self.regexpProps[i];
-          if (prop.min > occurences[i]) {
-            errors[prop.key.toString().slice(1, -1)] =
-              'regexp key matched ' +
-              occurences[i] +
-              ' times which is lower than allowed (' +
-              prop.min +
-              ')';
-          } else if (occurences[i] > prop.max) {
-            errors[prop.key.toString().slice(1, -1)] =
-              'regexp key matched ' +
-              occurences[i] +
-              ' times which is higher than allowed (' +
-              prop.max +
-              ')';
-          }
-        }
+    // Sorting properties into two groups
+    (this.stringProps = {}), (this.regexpProps = []);
+    this.properties.forEach(function(property) {
+      if (typeof property.key === 'string') {
+        self.stringProps[property.key] = property;
+      } else {
+        self.regexpProps.push(property);
       }
+    });
+  },
 
-      return Object.keys(errors).length ? errors : false;
-    },
+  errors: function(instance) {
+    var self = this;
 
-    validate: function(instance) {
-      var self = this;
+    if (instance == null) return instance + ' is not Object';
 
-      if (instance == null) return false;
+    var error,
+      errors = {};
 
-      // Simple string properties
-      var stringPropsValid = Object.keys(this.stringProps).every(function(key) {
-        return (
-          (self.stringProps[key].min === 0 && !(key in instance)) ||
-          self.stringProps[key].value.validate(instance[key])
-        );
-      });
-      if (!stringPropsValid) return false;
+    // Simple string properties
+    Object.keys(this.stringProps).forEach(function(key) {
+      if (key in instance) {
+        if ((error = self.stringProps[key].value.errors(instance[key]))) {
+          errors[key] = error;
+        }
+      } else if (
+        self.stringProps[key].min > 0 &&
+        self.stringProps[key].value.validate(instance[key])
+      ) {
+        errors[key] = 'key is not present in the object';
+      }
+    });
 
-      // If there are no RegExp and other validator, that's all
-      if (!this.regexpProps.length && this.other === anything) return true;
-
-      // Regexp and other properties
+    // Regexp and other properties
+    if (this.regexpProps.length || this.other !== anything) {
       var checked;
       var occurences = self.regexpProps.map(function() {
         return 0;
@@ -122,75 +52,141 @@ var ObjectSchema = Schema.patterns.ObjectSchema = Schema.extend(
       for (var key in instance) {
         // Checking the key against every key regexps
         checked = false;
-        var regexpPropsValid = this.regexpProps.every(function(prop, index) {
+        this.regexpProps.forEach(function(prop, index) {
           if (prop.key.test(key)) {
-            checked = true;
             occurences[index] += 1;
-            return prop.value.validate(instance[key]);
-          } else {
-            return true;
+            checked = true;
+            if ((error = prop.value.errors(instance[key]))) {
+              errors[key] = error;
+            }
           }
         });
-        if (!regexpPropsValid) return false;
 
         // If the key is not matched by regexps and by simple string checks
         // then check it against this.other
-        if (
-          !checked &&
-          !(key in this.stringProps) &&
-          !this.other.validate(instance[key])
-        )
-          return false;
+        if (!checked && !(key in this.stringProps)) {
+          if ((error = this.other.errors(instance[key]))) {
+            errors[key] = error;
+          }
+        }
       }
 
       // Checking if regexps have the appropriate occurence number in the object
       for (var i = 0; i < self.regexpProps.length; i++) {
         var prop = self.regexpProps[i];
-        if (prop.min > occurences[i] || occurences[i] > prop.max) return false;
+        if (prop.min > occurences[i]) {
+          errors[prop.key.toString().slice(1, -1)] =
+            'regexp key matched ' +
+            occurences[i] +
+            ' times which is lower than allowed (' +
+            prop.min +
+            ')';
+        } else if (occurences[i] > prop.max) {
+          errors[prop.key.toString().slice(1, -1)] =
+            'regexp key matched ' +
+            occurences[i] +
+            ' times which is higher than allowed (' +
+            prop.max +
+            ')';
+        }
       }
+    }
 
-      // If all checks passed, the instance conforms to the schema
-      return true;
-    },
+    return Object.keys(errors).length ? errors : false;
+  },
 
-    toJSON: Schema.session(function() {
-      var i,
-        property,
-        regexp,
-        json = Schema.prototype.toJSON.call(this, true);
+  validate: function(instance) {
+    var self = this;
 
-      if (json['$ref'] != null) return json;
+    if (instance == null) return false;
 
-      json.type = 'object';
+    // Simple string properties
+    var stringPropsValid = Object.keys(this.stringProps).every(function(key) {
+      return (
+        (self.stringProps[key].min === 0 && !(key in instance)) ||
+        self.stringProps[key].value.validate(instance[key])
+      );
+    });
+    if (!stringPropsValid) return false;
 
-      for (i in this.stringProps) {
-        property = this.stringProps[i];
-        json.properties = json.properties || {};
-        json.properties[property.key] = property.value.toJSON();
-        if (property.min === 1) json.properties[property.key].required = true;
-        if (property.title)
-          json.properties[property.key].title = property.title;
-      }
+    // If there are no RegExp and other validator, that's all
+    if (!this.regexpProps.length && this.other === anything) return true;
 
-      for (i = 0; i < this.regexpProps.length; i++) {
-        property = this.regexpProps[i];
-        json.patternProperties = json.patternProperties || {};
-        regexp = property.key.toString();
-        regexp = regexp.substr(2, regexp.length - 4);
-        json.patternProperties[regexp] = property.value.toJSON();
-        if (property.title)
-          json.patternProperties[regexp].title = property.title;
-      }
+    // Regexp and other properties
+    var checked;
+    var occurences = self.regexpProps.map(function() {
+      return 0;
+    });
 
-      if (this.other !== anything) {
-        json.additionalProperties =
-          this.other === nothing ? false : this.other.toJSON();
-      }
+    for (var key in instance) {
+      // Checking the key against every key regexps
+      checked = false;
+      var regexpPropsValid = this.regexpProps.every(function(prop, index) {
+        if (prop.key.test(key)) {
+          checked = true;
+          occurences[index] += 1;
+          return prop.value.validate(instance[key]);
+        } else {
+          return true;
+        }
+      });
+      if (!regexpPropsValid) return false;
 
-      return json;
-    })
-  }
-);
+      // If the key is not matched by regexps and by simple string checks
+      // then check it against this.other
+      if (
+        !checked &&
+        !(key in this.stringProps) &&
+        !this.other.validate(instance[key])
+      )
+        return false;
+    }
+
+    // Checking if regexps have the appropriate occurence number in the object
+    for (var i = 0; i < self.regexpProps.length; i++) {
+      var prop = self.regexpProps[i];
+      if (prop.min > occurences[i] || occurences[i] > prop.max) return false;
+    }
+
+    // If all checks passed, the instance conforms to the schema
+    return true;
+  },
+
+  toJSON: Schema.session(function() {
+    var i,
+      property,
+      regexp,
+      json = Schema.prototype.toJSON.call(this, true);
+
+    if (json['$ref'] != null) return json;
+
+    json.type = 'object';
+
+    for (i in this.stringProps) {
+      property = this.stringProps[i];
+      json.properties = json.properties || {};
+      json.properties[property.key] = property.value.toJSON();
+      if (property.min === 1) json.properties[property.key].required = true;
+      if (property.title) json.properties[property.key].title = property.title;
+    }
+
+    for (i = 0; i < this.regexpProps.length; i++) {
+      property = this.regexpProps[i];
+      json.patternProperties = json.patternProperties || {};
+      regexp = property.key.toString();
+      regexp = regexp.substr(2, regexp.length - 4);
+      json.patternProperties[regexp] = property.value.toJSON();
+      if (property.title) json.patternProperties[regexp].title = property.title;
+    }
+
+    if (this.other !== anything) {
+      json.additionalProperties =
+        this.other === nothing ? false : this.other.toJSON();
+    }
+
+    return json;
+  })
+}));
 
 export default ObjectSchema;
 

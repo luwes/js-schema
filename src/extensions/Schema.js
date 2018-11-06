@@ -1,29 +1,27 @@
 import Schema from '../BaseSchema';
 import schema from '../schema';
 
-var SchemaReference = Schema.extensions.SchemaReference = Schema.extend(
-  {
-    validate: function() {
-      throw new Error('Trying to validate unresolved schema reference.');
-    },
+var SchemaReference = (Schema.extensions.SchemaReference = Schema.extend({
+  validate: function() {
+    throw new Error('Trying to validate unresolved schema reference.');
+  },
 
-    resolve: function(schemaDescriptor) {
-      var schemaObject = Schema.fromJS(schemaDescriptor);
+  resolve: function(schemaDescriptor) {
+    var schemaObject = Schema.fromJS(schemaDescriptor);
 
-      for (var key in schemaObject) {
-        if (schemaObject[key] instanceof Function) {
-          this[key] = schemaObject[key].bind(schemaObject);
-        } else {
-          this[key] = schemaObject[key];
-        }
+    for (var key in schemaObject) {
+      if (schemaObject[key] instanceof Function) {
+        this[key] = schemaObject[key].bind(schemaObject);
+      } else {
+        this[key] = schemaObject[key];
       }
+    }
 
-      delete this.resolve;
-    },
+    delete this.resolve;
+  },
 
-    publicFunctions: ['resolve']
-  }
-);
+  publicFunctions: ['resolve']
+}));
 
 export default SchemaReference;
 

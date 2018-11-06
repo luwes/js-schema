@@ -4,18 +4,7 @@ import schema from '../../index.js';
 
 // Create a Test Suite
 var topic = {
-  invalid_inputs: [
-    0,
-    -1,
-    1,
-    'false',
-    'true',
-    'whatever',
-    NaN,
-    [],
-    {},
-    /dwa/
-  ]
+  invalid_inputs: [0, -1, 1, 'false', 'true', 'whatever', NaN, [], {}, /dwa/]
 };
 
 test('invalid input -> [0,-1,1,"false","true","whatever",NaN, [],{},/dwa/]', function() {

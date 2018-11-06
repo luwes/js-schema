@@ -20,30 +20,28 @@ var equal = function(a, b) {
   return true;
 };
 
-var EqualitySchema = Schema.patterns.EqualitySchema = Schema.extend(
-  {
-    initialize: function(object) {
-      this.object = object;
-    },
-    errors: function(instance) {
-      if (!equal(instance, this.object)) {
-        return instance + ' is not equal to ' + this.object;
-      }
-      return false;
-    },
-    validate: function(instance) {
-      return equal(instance, this.object);
-    },
-
-    toJSON: function() {
-      var json = Schema.prototype.toJSON.call(this);
-
-      json['enum'] = [this.object];
-
-      return json;
+var EqualitySchema = (Schema.patterns.EqualitySchema = Schema.extend({
+  initialize: function(object) {
+    this.object = object;
+  },
+  errors: function(instance) {
+    if (!equal(instance, this.object)) {
+      return instance + ' is not equal to ' + this.object;
     }
+    return false;
+  },
+  validate: function(instance) {
+    return equal(instance, this.object);
+  },
+
+  toJSON: function() {
+    var json = Schema.prototype.toJSON.call(this);
+
+    json['enum'] = [this.object];
+
+    return json;
   }
-);
+}));
 
 export default EqualitySchema;
 
