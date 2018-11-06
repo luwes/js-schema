@@ -33,12 +33,20 @@
     "lint": "eslint src",
     "pretest": "npm run lint",
     "test": "ava",
+    "posttest": "bundlesize",
     "build": "./build.sh",
     "prepare": "npm test",
     "preversion": "npm test"
   },
+  "bundlesize": [
+    {
+      "path": "./mjs-schema.min.js",
+      "maxSize": "6 kB"
+    }
+  ],
   "devDependencies": {
     "ava": "^1.0.0-rc.1",
+    "bundlesize": "^0.17.0",
     "eslint": "^5.8.0",
     "esm": "^3.0.84",
     "prettier": "^1.14.3",
