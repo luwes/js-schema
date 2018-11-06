@@ -22,10 +22,14 @@
     "url": "git@github.com:molnarg/js-schema.git"
   },
   "scripts": {
-    "test": "vows test/**/* --spec"
+    "lint": "eslint lib",
+    "pretest": "npm run lint",
+    "test": "vows test/**/* --spec",
+    "preversion": "npm run test"
   },
   "devDependencies": {
     "browserify": "*",
+    "eslint": "^5.8.0",
     "uglify-js": "*",
     "underscore": "^1.7.0",
     "vows": "^0.7.0"
