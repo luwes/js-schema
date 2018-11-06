@@ -1,25 +1,23 @@
 import Schema from '../BaseSchema';
 
-var BooleanSchema = Schema.extensions.BooleanSchema = new Schema.extend(
-  {
-    errors: function(instance) {
-      if (!this.validate(instance)) {
-        return instance + ' is not Boolean';
-      }
-      return false;
-    },
-
-    validate: function(instance) {
-      return Object(instance) instanceof Boolean;
-    },
-
-    toJSON: function() {
-      return {
-        type: 'boolean'
-      };
+var BooleanSchema = (Schema.extensions.BooleanSchema = new Schema.extend({
+  errors: function(instance) {
+    if (!this.validate(instance)) {
+      return instance + ' is not Boolean';
     }
+    return false;
+  },
+
+  validate: function(instance) {
+    return Object(instance) instanceof Boolean;
+  },
+
+  toJSON: function() {
+    return {
+      type: 'boolean'
+    };
   }
-);
+}));
 
 var booleanSchema = new BooleanSchema().wrap();
 export default booleanSchema;

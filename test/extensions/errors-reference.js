@@ -13,7 +13,7 @@ import ReferenceSchema from '../../src/patterns/reference';
 //   );
 // };
 
-var topic = function() {
+var topic = (function() {
   var A = function A() {
     this.name = 'dwa';
   };
@@ -46,7 +46,7 @@ var topic = function() {
       'new A()': schema(new ReferenceSchema(instanceA))
     }
   };
-}();
+})();
 
 test('all by all', function(t) {
   for (var inputKey in topic.inputs) {

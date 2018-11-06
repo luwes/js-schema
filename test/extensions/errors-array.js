@@ -14,10 +14,9 @@ test('Number -> invalid input : [null, undefined, Object, Function]', function()
   });
 });
 
-test('Number -> valid input : only numbers',  function() {
+test('Number -> valid input : only numbers', function() {
   var input = [9, 0, 1, 2, 3, 4, 5, 6];
   var aSchema = schema(Array.of(Number));
   var result = aSchema.errors(input);
   assert(result === false, 'errors method should return false');
 });
-

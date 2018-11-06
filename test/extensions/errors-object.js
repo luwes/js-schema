@@ -52,9 +52,7 @@ test('Testing Duck', function(t) {
   );
   errors.color.forEach(function(msg, index) {
     assert(
-      /string = green is not reference to (.*)/.test(
-        errors.color[index]
-      ),
+      /string = green is not reference to (.*)/.test(errors.color[index]),
       'Incorrect message was returned = ' + errors.color[index]
     );
   });
@@ -63,7 +61,6 @@ test('Testing Duck', function(t) {
     errors.color
   );
 });
-
 
 var topic = _.defaults(
   {
@@ -97,8 +94,7 @@ test('Object { test : Number }  : String was passed instead Number', function(t)
 
   assert(
     validation,
-    'Function schema.errors returns incorrect message : \n \t\t' +
-      t.log(errors)
+    'Function schema.errors returns incorrect message : \n \t\t' + t.log(errors)
   );
 });
 
@@ -124,8 +120,7 @@ test('Object { test : Number }  : Too big Number was passed ', function(t) {
 
   assert(
     validation,
-    'Function schema.errors returns incorrect message : \n \t\t' +
-      t.log(errors)
+    'Function schema.errors returns incorrect message : \n \t\t' + t.log(errors)
   );
 });
 
