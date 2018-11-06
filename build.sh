@@ -2,8 +2,8 @@
 
 cd $(dirname $0)
 
-DEBUG="js-schema.debug.js"
-MIN="js-schema.min.js"
+DEBUG="mjs-schema.debug.js"
+MIN="mjs-schema.min.js"
 
 if [ -f node_modules/browserify/bin/cmd.js ]
 then
