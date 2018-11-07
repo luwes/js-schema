@@ -162,62 +162,56 @@
     return Schema.fromJSON(sch).wrap();
   };
 
-  var ReferenceSchema = Schema.patterns.ReferenceSchema = Schema.extend(
-    {
-      initialize: function(value) {
-        this.value = value;
-      },
-      getName: function(obj) {
-        if (obj instanceof Object) {
-          return obj.constructor.name + ' = ' + obj;
-        } else {
-          return typeof obj + ' = ' + obj;
-        }
-      },
-      errors: function(instance) {
-        if (instance == null) {
-          return instance + ' is not a reference';
-        }
-        if (instance !== this.value) {
-          var middleMessage = ' is not reference to ';
-          return (
-            this.getName(instance) + middleMessage + this.getName(this.value)
-          );
-        }
-        return false;
-      },
-      validate: function(instance) {
-        return instance === this.value;
-      },
-
-      toJSON: function() {
-        var json = Schema.prototype.toJSON.call(this);
-
-        json['enum'] = [this.value];
-
-        return json;
+  var ReferenceSchema = Schema.extend({
+    initialize: function(value) {
+      this.value = value;
+    },
+    getName: function(obj) {
+      if (obj instanceof Object) {
+        return obj.constructor.name + ' = ' + obj;
+      } else {
+        return typeof obj + ' = ' + obj;
       }
+    },
+    errors: function(instance) {
+      if (instance == null) {
+        return instance + ' is not a reference';
+      }
+      if (instance !== this.value) {
+        var middleMessage = ' is not reference to ';
+        return this.getName(instance) + middleMessage + this.getName(this.value);
+      }
+      return false;
+    },
+    validate: function(instance) {
+      return instance === this.value;
+    },
+
+    toJSON: function() {
+      var json = Schema.prototype.toJSON.call(this);
+
+      json['enum'] = [this.value];
+
+      return json;
     }
-  );
+  });
 
   Schema.fromJS.def(function(value) {
     return new ReferenceSchema(value);
   });
 
-  var NothingSchema = Schema.patterns.NothingSchema = Schema.extend(
-    {
-      errors: function() {
-        return false;
-      },
-      validate: function(instance) {
-        return instance == null;
-      },
+  var NothingSchema = Schema.extend({
+    errors: function() {
+      return false;
+    },
+    validate: function(instance) {
+      return instance == null;
+    },
 
-      toJSON: function() {
-        return { type: 'null' };
-      }
+    toJSON: function() {
+      return { type: 'null' };
     }
-  );
+  });
 
   var nothing = new NothingSchema();
   var instance = nothing;
@@ -230,22 +224,20 @@
     if (sch.type === 'null') return nothing;
   });
 
-  var AnythingSchema = Schema.patterns.AnythingSchema = Schema.extend(
-    {
-      errors: function(instance) {
-        if (instance == null) return 'anything cannot be null';
+  var AnythingSchema = Schema.extend({
+    errors: function(instance) {
+      if (instance == null) return 'anything cannot be null';
 
-        return false;
-      },
-      validate: function(instance) {
-        return instance != null;
-      },
+      return false;
+    },
+    validate: function(instance) {
+      return instance != null;
+    },
 
-      toJSON: function() {
-        return { type: 'any' };
-      }
+    toJSON: function() {
+      return { type: 'any' };
     }
-  );
+  });
 
   var anything = new AnythingSchema();
   var instance$1 = anything;
@@ -258,118 +250,48 @@
     if (sch.type === 'any') return anything;
   });
 
-  var ObjectSchema = Schema.patterns.ObjectSchema = Schema.extend(
-    {
-      initialize: function(properties, other) {
-        var self = this;
+  var ObjectSchema = Schema.extend({
+    initialize: function(properties, other) {
+      var self = this;
 
-        this.other = other || instance$1;
-        this.properties = properties || [];
+      this.other = other || instance$1;
+      this.properties = properties || [];
 
-        // Sorting properties into two groups
-        (this.stringProps = {}), (this.regexpProps = []);
-        this.properties.forEach(function(property) {
-          if (typeof property.key === 'string') {
-            self.stringProps[property.key] = property;
-          } else {
-            self.regexpProps.push(property);
-          }
-        });
-      },
-
-      errors: function(instance$$1) {
-        var self = this;
-
-        if (instance$$1 == null) return instance$$1 + ' is not Object';
-
-        var error,
-          errors = {};
-
-        // Simple string properties
-        Object.keys(this.stringProps).forEach(function(key) {
-          if (key in instance$$1) {
-            if ((error = self.stringProps[key].value.errors(instance$$1[key]))) {
-              errors[key] = error;
-            }
-          } else if (
-            self.stringProps[key].min > 0 &&
-            self.stringProps[key].value.validate(instance$$1[key])
-          ) {
-            errors[key] = 'key is not present in the object';
-          }
-        });
-
-        // Regexp and other properties
-        if (this.regexpProps.length || this.other !== instance$1) {
-          var checked;
-          var occurences = self.regexpProps.map(function() {
-            return 0;
-          });
-
-          for (var key in instance$$1) {
-            // Checking the key against every key regexps
-            checked = false;
-            this.regexpProps.forEach(function(prop, index) {
-              if (prop.key.test(key)) {
-                occurences[index] += 1;
-                checked = true;
-                if ((error = prop.value.errors(instance$$1[key]))) {
-                  errors[key] = error;
-                }
-              }
-            });
-
-            // If the key is not matched by regexps and by simple string checks
-            // then check it against this.other
-            if (!checked && !(key in this.stringProps)) {
-              if ((error = this.other.errors(instance$$1[key]))) {
-                errors[key] = error;
-              }
-            }
-          }
-
-          // Checking if regexps have the appropriate occurence number in the object
-          for (var i = 0; i < self.regexpProps.length; i++) {
-            var prop = self.regexpProps[i];
-            if (prop.min > occurences[i]) {
-              errors[prop.key.toString().slice(1, -1)] =
-                'regexp key matched ' +
-                occurences[i] +
-                ' times which is lower than allowed (' +
-                prop.min +
-                ')';
-            } else if (occurences[i] > prop.max) {
-              errors[prop.key.toString().slice(1, -1)] =
-                'regexp key matched ' +
-                occurences[i] +
-                ' times which is higher than allowed (' +
-                prop.max +
-                ')';
-            }
-          }
+      // Sorting properties into two groups
+      (this.stringProps = {}), (this.regexpProps = []);
+      this.properties.forEach(function(property) {
+        if (typeof property.key === 'string') {
+          self.stringProps[property.key] = property;
+        } else {
+          self.regexpProps.push(property);
         }
+      });
+    },
 
-        return Object.keys(errors).length ? errors : false;
-      },
+    errors: function(instance$$1) {
+      var self = this;
 
-      validate: function(instance$$1) {
-        var self = this;
+      if (instance$$1 == null) return instance$$1 + ' is not Object';
 
-        if (instance$$1 == null) return false;
+      var error,
+        errors = {};
 
-        // Simple string properties
-        var stringPropsValid = Object.keys(this.stringProps).every(function(key) {
-          return (
-            (self.stringProps[key].min === 0 && !(key in instance$$1)) ||
-            self.stringProps[key].value.validate(instance$$1[key])
-          );
-        });
-        if (!stringPropsValid) return false;
+      // Simple string properties
+      Object.keys(this.stringProps).forEach(function(key) {
+        if (key in instance$$1) {
+          if ((error = self.stringProps[key].value.errors(instance$$1[key]))) {
+            errors[key] = error;
+          }
+        } else if (
+          self.stringProps[key].min > 0 &&
+          self.stringProps[key].value.validate(instance$$1[key])
+        ) {
+          errors[key] = 'key is not present in the object';
+        }
+      });
 
-        // If there are no RegExp and other validator, that's all
-        if (!this.regexpProps.length && this.other === instance$1) return true;
-
-        // Regexp and other properties
+      // Regexp and other properties
+      if (this.regexpProps.length || this.other !== instance$1) {
         var checked;
         var occurences = self.regexpProps.map(function() {
           return 0;
@@ -378,75 +300,141 @@
         for (var key in instance$$1) {
           // Checking the key against every key regexps
           checked = false;
-          var regexpPropsValid = this.regexpProps.every(function(prop, index) {
+          this.regexpProps.forEach(function(prop, index) {
             if (prop.key.test(key)) {
-              checked = true;
               occurences[index] += 1;
-              return prop.value.validate(instance$$1[key]);
-            } else {
-              return true;
+              checked = true;
+              if ((error = prop.value.errors(instance$$1[key]))) {
+                errors[key] = error;
+              }
             }
           });
-          if (!regexpPropsValid) return false;
 
           // If the key is not matched by regexps and by simple string checks
           // then check it against this.other
-          if (
-            !checked &&
-            !(key in this.stringProps) &&
-            !this.other.validate(instance$$1[key])
-          )
-            return false;
+          if (!checked && !(key in this.stringProps)) {
+            if ((error = this.other.errors(instance$$1[key]))) {
+              errors[key] = error;
+            }
+          }
         }
 
         // Checking if regexps have the appropriate occurence number in the object
         for (var i = 0; i < self.regexpProps.length; i++) {
           var prop = self.regexpProps[i];
-          if (prop.min > occurences[i] || occurences[i] > prop.max) return false;
+          if (prop.min > occurences[i]) {
+            errors[prop.key.toString().slice(1, -1)] =
+              'regexp key matched ' +
+              occurences[i] +
+              ' times which is lower than allowed (' +
+              prop.min +
+              ')';
+          } else if (occurences[i] > prop.max) {
+            errors[prop.key.toString().slice(1, -1)] =
+              'regexp key matched ' +
+              occurences[i] +
+              ' times which is higher than allowed (' +
+              prop.max +
+              ')';
+          }
         }
+      }
 
-        // If all checks passed, the instance conforms to the schema
-        return true;
-      },
+      return Object.keys(errors).length ? errors : false;
+    },
 
-      toJSON: Schema.session(function() {
-        var i,
-          property,
-          regexp,
-          json = Schema.prototype.toJSON.call(this, true);
+    validate: function(instance$$1) {
+      var self = this;
 
-        if (json['$ref'] != null) return json;
+      if (instance$$1 == null) return false;
 
-        json.type = 'object';
+      // Simple string properties
+      var stringPropsValid = Object.keys(this.stringProps).every(function(key) {
+        return (
+          (self.stringProps[key].min === 0 && !(key in instance$$1)) ||
+          self.stringProps[key].value.validate(instance$$1[key])
+        );
+      });
+      if (!stringPropsValid) return false;
 
-        for (i in this.stringProps) {
-          property = this.stringProps[i];
-          json.properties = json.properties || {};
-          json.properties[property.key] = property.value.toJSON();
-          if (property.min === 1) json.properties[property.key].required = true;
-          if (property.title)
-            json.properties[property.key].title = property.title;
-        }
+      // If there are no RegExp and other validator, that's all
+      if (!this.regexpProps.length && this.other === instance$1) return true;
 
-        for (i = 0; i < this.regexpProps.length; i++) {
-          property = this.regexpProps[i];
-          json.patternProperties = json.patternProperties || {};
-          regexp = property.key.toString();
-          regexp = regexp.substr(2, regexp.length - 4);
-          json.patternProperties[regexp] = property.value.toJSON();
-          if (property.title)
-            json.patternProperties[regexp].title = property.title;
-        }
+      // Regexp and other properties
+      var checked;
+      var occurences = self.regexpProps.map(function() {
+        return 0;
+      });
 
-        if (this.other !== instance$1) {
-          json.additionalProperties =
-            this.other === instance ? false : this.other.toJSON();
-        }
+      for (var key in instance$$1) {
+        // Checking the key against every key regexps
+        checked = false;
+        var regexpPropsValid = this.regexpProps.every(function(prop, index) {
+          if (prop.key.test(key)) {
+            checked = true;
+            occurences[index] += 1;
+            return prop.value.validate(instance$$1[key]);
+          } else {
+            return true;
+          }
+        });
+        if (!regexpPropsValid) return false;
 
-        return json;
-      })
-    }
-  );
+        // If the key is not matched by regexps and by simple string checks
+        // then check it against this.other
+        if (
+          !checked &&
+          !(key in this.stringProps) &&
+          !this.other.validate(instance$$1[key])
+        )
+          return false;
+      }
+
+      // Checking if regexps have the appropriate occurence number in the object
+      for (var i = 0; i < self.regexpProps.length; i++) {
+        var prop = self.regexpProps[i];
+        if (prop.min > occurences[i] || occurences[i] > prop.max) return false;
+      }
+
+      // If all checks passed, the instance conforms to the schema
+      return true;
+    },
+
+    toJSON: Schema.session(function() {
+      var i,
+        property,
+        regexp,
+        json = Schema.prototype.toJSON.call(this, true);
+
+      if (json['$ref'] != null) return json;
+
+      json.type = 'object';
+
+      for (i in this.stringProps) {
+        property = this.stringProps[i];
+        json.properties = json.properties || {};
+        json.properties[property.key] = property.value.toJSON();
+        if (property.min === 1) json.properties[property.key].required = true;
+        if (property.title) json.properties[property.key].title = property.title;
+      }
+
+      for (i = 0; i < this.regexpProps.length; i++) {
+        property = this.regexpProps[i];
+        json.patternProperties = json.patternProperties || {};
+        regexp = property.key.toString();
+        regexp = regexp.substr(2, regexp.length - 4);
+        json.patternProperties[regexp] = property.value.toJSON();
+        if (property.title) json.patternProperties[regexp].title = property.title;
+      }
+
+      if (this.other !== instance$1) {
+        json.additionalProperties =
+          this.other === instance ? false : this.other.toJSON();
+      }
+
+      return json;
+    })
+  });
 
   // Testing if a given string is a real regexp or just a single string escaped
   // If it is just a string escaped, return the string. Otherwise return the regexp
@@ -583,37 +571,35 @@
     return true;
   };
 
-  var EqualitySchema = Schema.patterns.EqualitySchema = Schema.extend(
-    {
-      initialize: function(object) {
-        this.object = object;
-      },
-      errors: function(instance) {
-        if (!equal(instance, this.object)) {
-          return instance + ' is not equal to ' + this.object;
-        }
-        return false;
-      },
-      validate: function(instance) {
-        return equal(instance, this.object);
-      },
-
-      toJSON: function() {
-        var json = Schema.prototype.toJSON.call(this);
-
-        json['enum'] = [this.object];
-
-        return json;
+  var EqualitySchema = Schema.extend({
+    initialize: function(object) {
+      this.object = object;
+    },
+    errors: function(instance) {
+      if (!equal(instance, this.object)) {
+        return instance + ' is not equal to ' + this.object;
       }
+      return false;
+    },
+    validate: function(instance) {
+      return equal(instance, this.object);
+    },
+
+    toJSON: function() {
+      var json = Schema.prototype.toJSON.call(this);
+
+      json['enum'] = [this.object];
+
+      return json;
     }
-  );
+  });
 
   Schema.fromJS.def(function(sch) {
     if (sch instanceof Array && sch.length === 1)
       return new EqualitySchema(sch[0]);
   });
 
-  var OrSchema = Schema.patterns.OrSchema = Schema.extend({
+  var OrSchema = Schema.extend({
     initialize: function(schemas) {
       this.schemas = schemas;
     },
@@ -700,43 +686,41 @@
     }
   });
 
-  var RegexpSchema = Schema.patterns.RegexpSchema = Schema.extend(
-    {
-      initialize: function(regexp) {
-        this.regexp = regexp;
-      },
-      errors: function(instance) {
-        var message;
-        if (!(Object(instance) instanceof String)) {
-          message = instance + ' is not a String';
-        } else if (this.regexp && !this.regexp.test(instance)) {
-          message = instance + ' is not matched with RegExp -> ' + this.regexp;
-        }
-
-        if (message) return message;
-        return false;
-      },
-      validate: function(instance) {
-        return (
-          Object(instance) instanceof String &&
-          (!this.regexp || this.regexp.test(instance))
-        );
-      },
-
-      toJSON: function() {
-        var json = Schema.prototype.toJSON.call(this);
-
-        json.type = 'string';
-
-        if (this.regexp) {
-          json.pattern = this.regexp.toString();
-          json.pattern = json.pattern.substr(1, json.pattern.length - 2);
-        }
-
-        return json;
+  var RegexpSchema = Schema.extend({
+    initialize: function(regexp) {
+      this.regexp = regexp;
+    },
+    errors: function(instance) {
+      var message;
+      if (!(Object(instance) instanceof String)) {
+        message = instance + ' is not a String';
+      } else if (this.regexp && !this.regexp.test(instance)) {
+        message = instance + ' is not matched with RegExp -> ' + this.regexp;
       }
+
+      if (message) return message;
+      return false;
+    },
+    validate: function(instance) {
+      return (
+        Object(instance) instanceof String &&
+        (!this.regexp || this.regexp.test(instance))
+      );
+    },
+
+    toJSON: function() {
+      var json = Schema.prototype.toJSON.call(this);
+
+      json.type = 'string';
+
+      if (this.regexp) {
+        json.pattern = this.regexp.toString();
+        json.pattern = json.pattern.substr(1, json.pattern.length - 2);
+      }
+
+      return json;
     }
-  );
+  });
 
   Schema.fromJSON.def(function(sch) {
     if (!sch || sch.type !== 'string') return;
@@ -756,43 +740,37 @@
     if (regexp instanceof RegExp) return new RegexpSchema(regexp);
   });
 
-  var ClassSchema = Schema.patterns.ClassSchema = Schema.extend(
-    {
-      initialize: function(constructor) {
-        this.constructor = constructor;
-      },
-      getName: function(obj) {
-        if (!obj) return obj;
-        if (obj instanceof Object) {
-          return obj.constructor.name;
-        } else {
-          return typeof obj + ' = ' + obj;
-        }
-      },
-      errors: function(instance) {
-        var middleMessage = ' is not instance of ';
-
-        if (instance == null) {
-          return (
-            this.getName(instance) +
-            middleMessage +
-            this.getName(this.constructor)
-          );
-        }
-        if (!(instance instanceof this.constructor)) {
-          return (
-            this.getName(instance) +
-            middleMessage +
-            this.getName(this.constructor)
-          );
-        }
-        return false;
-      },
-      validate: function(instance) {
-        return instance instanceof this.constructor;
+  var ClassSchema = Schema.extend({
+    initialize: function(constructor) {
+      this.constructor = constructor;
+    },
+    getName: function(obj) {
+      if (!obj) return obj;
+      if (obj instanceof Object) {
+        return obj.constructor.name;
+      } else {
+        return typeof obj + ' = ' + obj;
       }
+    },
+    errors: function(instance) {
+      var middleMessage = ' is not instance of ';
+
+      if (instance == null) {
+        return (
+          this.getName(instance) + middleMessage + this.getName(this.constructor)
+        );
+      }
+      if (!(instance instanceof this.constructor)) {
+        return (
+          this.getName(instance) + middleMessage + this.getName(this.constructor)
+        );
+      }
+      return false;
+    },
+    validate: function(instance) {
+      return instance instanceof this.constructor;
     }
-  );
+  });
 
   Schema.fromJS.def(function(constructor) {
     if (!(constructor instanceof Function)) return;
@@ -808,26 +786,24 @@
     if (sch instanceof Schema) return sch;
   });
 
-  var BooleanSchema = Schema.extensions.BooleanSchema = new Schema.extend(
-    {
-      errors: function(instance) {
-        if (!this.validate(instance)) {
-          return instance + ' is not Boolean';
-        }
-        return false;
-      },
-
-      validate: function(instance) {
-        return Object(instance) instanceof Boolean;
-      },
-
-      toJSON: function() {
-        return {
-          type: 'boolean'
-        };
+  var BooleanSchema = new Schema.extend({
+    errors: function(instance) {
+      if (!this.validate(instance)) {
+        return instance + ' is not Boolean';
       }
+      return false;
+    },
+
+    validate: function(instance) {
+      return Object(instance) instanceof Boolean;
+    },
+
+    toJSON: function() {
+      return {
+        type: 'boolean'
+      };
     }
-  );
+  });
 
   var booleanSchema = new BooleanSchema().wrap();
 
@@ -839,139 +815,137 @@
 
   Boolean.schema = booleanSchema;
 
-  var NumberSchema = Schema.extensions.NumberSchema = Schema.extend(
-    {
-      initialize: function(
+  var NumberSchema = Schema.extend({
+    initialize: function(
+      minimum,
+      exclusiveMinimum,
+      maximum,
+      exclusiveMaximum,
+      divisibleBy
+    ) {
+      this.minimum = minimum != null ? minimum : -Infinity;
+      this.exclusiveMinimum = exclusiveMinimum;
+      this.maximum = minimum != null ? maximum : Infinity;
+      this.exclusiveMaximum = exclusiveMaximum;
+      this.divisibleBy = divisibleBy || 0;
+    },
+
+    min: function(minimum) {
+      return new NumberSchema(
         minimum,
-        exclusiveMinimum,
+        false,
+        this.maximum,
+        this.exclusiveMaximum,
+        this.divisibleBy
+      ).wrap();
+    },
+
+    above: function(minimum) {
+      return new NumberSchema(
+        minimum,
+        true,
+        this.maximum,
+        this.exclusiveMaximum,
+        this.divisibleBy
+      ).wrap();
+    },
+
+    max: function(maximum) {
+      return new NumberSchema(
+        this.minimum,
+        this.exclusiveMinimum,
         maximum,
-        exclusiveMaximum,
+        false,
+        this.divisibleBy
+      ).wrap();
+    },
+
+    below: function(maximum) {
+      return new NumberSchema(
+        this.minimum,
+        this.exclusiveMinimum,
+        maximum,
+        true,
+        this.divisibleBy
+      ).wrap();
+    },
+
+    step: function(divisibleBy) {
+      return new NumberSchema(
+        this.minimum,
+        this.exclusiveMinimum,
+        this.maximum,
+        this.exclusiveMaximum,
         divisibleBy
-      ) {
-        this.minimum = minimum != null ? minimum : -Infinity;
-        this.exclusiveMinimum = exclusiveMinimum;
-        this.maximum = minimum != null ? maximum : Infinity;
-        this.exclusiveMaximum = exclusiveMaximum;
-        this.divisibleBy = divisibleBy || 0;
-      },
+      ).wrap();
+    },
 
-      min: function(minimum) {
-        return new NumberSchema(
-          minimum,
-          false,
-          this.maximum,
-          this.exclusiveMaximum,
-          this.divisibleBy
-        ).wrap();
-      },
+    publicFunctions: ['min', 'above', 'max', 'below', 'step'],
 
-      above: function(minimum) {
-        return new NumberSchema(
-          minimum,
-          true,
-          this.maximum,
-          this.exclusiveMaximum,
-          this.divisibleBy
-        ).wrap();
-      },
-
-      max: function(maximum) {
-        return new NumberSchema(
-          this.minimum,
-          this.exclusiveMinimum,
-          maximum,
-          false,
-          this.divisibleBy
-        ).wrap();
-      },
-
-      below: function(maximum) {
-        return new NumberSchema(
-          this.minimum,
-          this.exclusiveMinimum,
-          maximum,
-          true,
-          this.divisibleBy
-        ).wrap();
-      },
-
-      step: function(divisibleBy) {
-        return new NumberSchema(
-          this.minimum,
-          this.exclusiveMinimum,
-          this.maximum,
-          this.exclusiveMaximum,
-          divisibleBy
-        ).wrap();
-      },
-
-      publicFunctions: ['min', 'above', 'max', 'below', 'step'],
-
-      errors: function(instance) {
-        var message;
-        if (!(Object(instance) instanceof Number)) {
-          message = instance + ' is not Number';
-        } else if (instance < this.minimum) {
-          message =
-            'number = ' +
-            instance +
-            ' is smaller than required minimum = ' +
-            this.minimum;
-        } else if (instance > this.maximum) {
-          message =
-            'number = ' +
-            instance +
-            ' is bigger than required maximum = ' +
-            this.maximum;
-        } else if (this.divisibleBy !== 0 && instance % this.divisibleBy !== 0) {
-          message =
-            'number = ' + instance + ' is not divisibleBy ' + this.divisibleBy;
-        }
-
-        if (message != null) {
-          return message;
-        }
-        return false;
-      },
-
-      validate: function(instance) {
-        return (
-          Object(instance) instanceof Number &&
-          (this.exclusiveMinimum
-            ? instance > this.minimum
-            : instance >= this.minimum) &&
-          (this.exclusiveMaximum
-            ? instance < this.maximum
-            : instance <= this.maximum) &&
-          (this.divisibleBy === 0 || instance % this.divisibleBy === 0)
-        );
-      },
-
-      toJSON: function() {
-        var json = Schema.prototype.toJSON.call(this);
-
-        json.type =
-          this.divisibleBy !== 0 && this.divisibleBy % 1 === 0
-            ? 'integer'
-            : 'number';
-
-        if (this.divisibleBy !== 0 && this.divisibleBy !== 1)
-          json.divisibleBy = this.divisibleBy;
-
-        if (this.minimum !== -Infinity) {
-          json.minimum = this.minimum;
-          if (this.exclusiveMinimum === true) json.exclusiveMinimum = true;
-        }
-
-        if (this.maximum !== Infinity) {
-          json.maximum = this.maximum;
-          if (this.exclusiveMaximum === true) json.exclusiveMaximum = true;
-        }
-
-        return json;
+    errors: function(instance) {
+      var message;
+      if (!(Object(instance) instanceof Number)) {
+        message = instance + ' is not Number';
+      } else if (instance < this.minimum) {
+        message =
+          'number = ' +
+          instance +
+          ' is smaller than required minimum = ' +
+          this.minimum;
+      } else if (instance > this.maximum) {
+        message =
+          'number = ' +
+          instance +
+          ' is bigger than required maximum = ' +
+          this.maximum;
+      } else if (this.divisibleBy !== 0 && instance % this.divisibleBy !== 0) {
+        message =
+          'number = ' + instance + ' is not divisibleBy ' + this.divisibleBy;
       }
+
+      if (message != null) {
+        return message;
+      }
+      return false;
+    },
+
+    validate: function(instance) {
+      return (
+        Object(instance) instanceof Number &&
+        (this.exclusiveMinimum
+          ? instance > this.minimum
+          : instance >= this.minimum) &&
+        (this.exclusiveMaximum
+          ? instance < this.maximum
+          : instance <= this.maximum) &&
+        (this.divisibleBy === 0 || instance % this.divisibleBy === 0)
+      );
+    },
+
+    toJSON: function() {
+      var json = Schema.prototype.toJSON.call(this);
+
+      json.type =
+        this.divisibleBy !== 0 && this.divisibleBy % 1 === 0
+          ? 'integer'
+          : 'number';
+
+      if (this.divisibleBy !== 0 && this.divisibleBy !== 1)
+        json.divisibleBy = this.divisibleBy;
+
+      if (this.minimum !== -Infinity) {
+        json.minimum = this.minimum;
+        if (this.exclusiveMinimum === true) json.exclusiveMinimum = true;
+      }
+
+      if (this.maximum !== Infinity) {
+        json.maximum = this.maximum;
+        if (this.exclusiveMaximum === true) json.exclusiveMaximum = true;
+      }
+
+      return json;
     }
-  );
+  });
 
   Schema.fromJSON.def(function(sch) {
     if (!sch || (sch.type !== 'number' && sch.type !== 'integer')) return;
@@ -1019,94 +993,92 @@
 
   Object.schema = new ObjectSchema().wrap();
 
-  var ArraySchema = Schema.extensions.ArraySchema = Schema.extend(
-    {
-      initialize: function(itemSchema, max, min) {
-        this.itemSchema = itemSchema || instance$1;
-        this.min = min || 0;
-        this.max = max || Infinity;
-      },
-      errors: function(instance$$1) {
-        // Instance must be an instance of Array
-        if (!(instance$$1 instanceof Array))
-          return instance$$1 + ' is not an instance of Array';
+  var ArraySchema = Schema.extend({
+    initialize: function(itemSchema, max, min) {
+      this.itemSchema = itemSchema || instance$1;
+      this.min = min || 0;
+      this.max = max || Infinity;
+    },
+    errors: function(instance$$1) {
+      // Instance must be an instance of Array
+      if (!(instance$$1 instanceof Array))
+        return instance$$1 + ' is not an instance of Array';
 
-        // Checking length
-        if (this.min === this.max) {
-          if (instance$$1.length !== this.min)
-            return (
-              'Array length should be equal to ' +
-              this.min +
-              ' and is ' +
-              instance$$1.length
-            );
-        } else {
-          if (this.min > 0 && instance$$1.length < this.min)
-            return (
-              'Array length should not be less than ' +
-              this.min +
-              ' and is ' +
-              instance$$1.length
-            );
-          if (this.max < Infinity && instance$$1.length > this.max)
-            return (
-              'Array length should not be more than ' +
-              this.max +
-              ' and is ' +
-              instance$$1.length
-            );
+      // Checking length
+      if (this.min === this.max) {
+        if (instance$$1.length !== this.min)
+          return (
+            'Array length should be equal to ' +
+            this.min +
+            ' and is ' +
+            instance$$1.length
+          );
+      } else {
+        if (this.min > 0 && instance$$1.length < this.min)
+          return (
+            'Array length should not be less than ' +
+            this.min +
+            ' and is ' +
+            instance$$1.length
+          );
+        if (this.max < Infinity && instance$$1.length > this.max)
+          return (
+            'Array length should not be more than ' +
+            this.max +
+            ' and is ' +
+            instance$$1.length
+          );
+      }
+
+      // Checking conformance to the given item schema
+      var results = {};
+      for (var i = 0; i < instance$$1.length; i++) {
+        var errs = this.itemSchema.errors(instance$$1[i]);
+        if (errs) {
+          results[i] = errs;
         }
+      }
+      var resultKeysArray = Object.keys(results);
+      if (resultKeysArray.length > 0) {
+        return results;
+      }
 
-        // Checking conformance to the given item schema
-        var results = {};
-        for (var i = 0; i < instance$$1.length; i++) {
-          var errs = this.itemSchema.errors(instance$$1[i]);
-          if (errs) {
-            results[i] = errs;
-          }
-        }
-        var resultKeysArray = Object.keys(results);
-        if (resultKeysArray.length > 0) {
-          return results;
-        }
+      return false;
+    },
+    validate: function(instance$$1) {
+      // Instance must be an instance of Array
+      if (!(instance$$1 instanceof Array)) return false;
 
-        return false;
-      },
-      validate: function(instance$$1) {
-        // Instance must be an instance of Array
-        if (!(instance$$1 instanceof Array)) return false;
+      // Checking length
+      if (this.min === this.max) {
+        if (instance$$1.length !== this.min) return false;
+      } else {
+        if (this.min > 0 && instance$$1.length < this.min) return false;
+        if (this.max < Infinity && instance$$1.length > this.max) return false;
+      }
 
-        // Checking length
-        if (this.min === this.max) {
-          if (instance$$1.length !== this.min) return false;
-        } else {
-          if (this.min > 0 && instance$$1.length < this.min) return false;
-          if (this.max < Infinity && instance$$1.length > this.max) return false;
-        }
+      // Checking conformance to the given item schema
+      for (var i = 0; i < instance$$1.length; i++) {
+        if (!this.itemSchema.validate(instance$$1[i])) return false;
+      }
 
-        // Checking conformance to the given item schema
-        for (var i = 0; i < instance$$1.length; i++) {
-          if (!this.itemSchema.validate(instance$$1[i])) return false;
-        }
+      return true;
+    },
 
-        return true;
-      },
+    toJSON: Schema.session(function() {
+      var json = Schema.prototype.toJSON.call(this, true);
 
-      toJSON: Schema.session(function() {
-        var json = Schema.prototype.toJSON.call(this, true);
+      if (json['$ref'] != null) return json;
 
-        if (json['$ref'] != null) return json;
+      json.type = 'array';
 
-        json.type = 'array';
+      if (this.min > 0) json.minItems = this.min;
+      if (this.max < Infinity) json.maxItems = this.max;
+      if (this.itemSchema !== instance$1) json.items = this.itemSchema.toJSON();
 
-        if (this.min > 0) json.minItems = this.min;
-        if (this.max < Infinity) json.maxItems = this.max;
-        if (this.itemSchema !== instance$1) json.items = this.itemSchema.toJSON();
-
-        return json;
-      })
-    }
-  );
+      return json;
+    })
+  });
 
   Schema.fromJSON.def(function(sch) {
     if (!sch || sch.type !== 'array') return;
@@ -1162,29 +1134,27 @@
     return new ReferenceSchema(f).wrap();
   };
 
-  var SchemaReference = Schema.extensions.SchemaReference = Schema.extend(
-    {
-      validate: function() {
-        throw new Error('Trying to validate unresolved schema reference.');
-      },
+  var SchemaReference = Schema.extend({
+    validate: function() {
+      throw new Error('Trying to validate unresolved schema reference.');
+    },
 
-      resolve: function(schemaDescriptor) {
-        var schemaObject = Schema.fromJS(schemaDescriptor);
+    resolve: function(schemaDescriptor) {
+      var schemaObject = Schema.fromJS(schemaDescriptor);
 
-        for (var key in schemaObject) {
-          if (schemaObject[key] instanceof Function) {
-            this[key] = schemaObject[key].bind(schemaObject);
-          } else {
-            this[key] = schemaObject[key];
-          }
+      for (var key in schemaObject) {
+        if (schemaObject[key] instanceof Function) {
+          this[key] = schemaObject[key].bind(schemaObject);
+        } else {
+          this[key] = schemaObject[key];
         }
+      }
 
-        delete this.resolve;
-      },
+      delete this.resolve;
+    },
 
-      publicFunctions: ['resolve']
-    }
-  );
+    publicFunctions: ['resolve']
+  });
 
   schema.reference = function() {
     return new SchemaReference();

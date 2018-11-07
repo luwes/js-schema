@@ -20,7 +20,7 @@ var equal = function(a, b) {
   return true;
 };
 
-var EqualitySchema = (Schema.patterns.EqualitySchema = Schema.extend({
+var EqualitySchema = Schema.extend({
   initialize: function(object) {
     this.object = object;
   },
@@ -41,7 +41,7 @@ var EqualitySchema = (Schema.patterns.EqualitySchema = Schema.extend({
 
     return json;
   }
-}));
+});
 
 export default EqualitySchema;
 

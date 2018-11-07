@@ -1,7 +1,7 @@
 import Schema from '../BaseSchema';
 import schema from '../schema';
 
-var SchemaReference = (Schema.extensions.SchemaReference = Schema.extend({
+var SchemaReference = Schema.extend({
   validate: function() {
     throw new Error('Trying to validate unresolved schema reference.');
   },
@@ -21,7 +21,7 @@ var SchemaReference = (Schema.extensions.SchemaReference = Schema.extend({
   },
 
   publicFunctions: ['resolve']
-}));
+});
 
 export default SchemaReference;
 

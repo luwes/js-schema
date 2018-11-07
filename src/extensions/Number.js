@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var NumberSchema = (Schema.extensions.NumberSchema = Schema.extend({
+var NumberSchema = Schema.extend({
   initialize: function(
     minimum,
     exclusiveMinimum,
@@ -130,7 +130,7 @@ var NumberSchema = (Schema.extensions.NumberSchema = Schema.extend({
 
     return json;
   }
-}));
+});
 
 export default NumberSchema;
 

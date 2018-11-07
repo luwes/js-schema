@@ -2,7 +2,7 @@ import Schema from '../BaseSchema';
 import EqualitySchema from '../patterns/equality';
 import { instance as anything } from '../patterns/anything';
 
-var ArraySchema = (Schema.extensions.ArraySchema = Schema.extend({
+var ArraySchema = Schema.extend({
   initialize: function(itemSchema, max, min) {
     this.itemSchema = itemSchema || anything;
     this.min = min || 0;
@@ -87,7 +87,7 @@ var ArraySchema = (Schema.extensions.ArraySchema = Schema.extend({
 
     return json;
   })
-}));
+});
 
 export default ArraySchema;
 

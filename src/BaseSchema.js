@@ -116,6 +116,3 @@ Schema.fromJS.def = Array.prototype.push.bind(fromJSdefs);
 var fromJSONdefs = [];
 Schema.fromJSON = session(lastDefinedResult.bind(null, fromJSONdefs));
 Schema.fromJSON.def = Array.prototype.push.bind(fromJSONdefs);
-
-Schema.patterns = {};
-Schema.extensions = {};

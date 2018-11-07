@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var ReferenceSchema = (Schema.patterns.ReferenceSchema = Schema.extend({
+var ReferenceSchema = Schema.extend({
   initialize: function(value) {
     this.value = value;
   },
@@ -32,7 +32,7 @@ var ReferenceSchema = (Schema.patterns.ReferenceSchema = Schema.extend({
 
     return json;
   }
-}));
+});
 
 export default ReferenceSchema;
 

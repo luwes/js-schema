@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var NothingSchema = (Schema.patterns.NothingSchema = Schema.extend({
+var NothingSchema = Schema.extend({
   errors: function() {
     return false;
   },
@@ -11,7 +11,7 @@ var NothingSchema = (Schema.patterns.NothingSchema = Schema.extend({
   toJSON: function() {
     return { type: 'null' };
   }
-}));
+});
 
 export default NothingSchema;
 

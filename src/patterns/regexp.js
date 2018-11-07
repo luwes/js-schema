@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var RegexpSchema = (Schema.patterns.RegexpSchema = Schema.extend({
+var RegexpSchema = Schema.extend({
   initialize: function(regexp) {
     this.regexp = regexp;
   },
@@ -34,7 +34,7 @@ var RegexpSchema = (Schema.patterns.RegexpSchema = Schema.extend({
 
     return json;
   }
-}));
+});
 
 export default RegexpSchema;
 

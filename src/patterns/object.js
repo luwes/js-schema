@@ -2,7 +2,7 @@ import Schema from '../BaseSchema';
 import { instance as anything } from './anything';
 import { instance as nothing } from './nothing';
 
-var ObjectSchema = (Schema.patterns.ObjectSchema = Schema.extend({
+var ObjectSchema = Schema.extend({
   initialize: function(properties, other) {
     var self = this;
 
@@ -186,7 +186,7 @@ var ObjectSchema = (Schema.patterns.ObjectSchema = Schema.extend({
 
     return json;
   })
-}));
+});
 
 export default ObjectSchema;
 

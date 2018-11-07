@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var BooleanSchema = (Schema.extensions.BooleanSchema = new Schema.extend({
+var BooleanSchema = new Schema.extend({
   errors: function(instance) {
     if (!this.validate(instance)) {
       return instance + ' is not Boolean';
@@ -17,7 +17,7 @@ var BooleanSchema = (Schema.extensions.BooleanSchema = new Schema.extend({
       type: 'boolean'
     };
   }
-}));
+});
 
 var booleanSchema = new BooleanSchema().wrap();
 export default booleanSchema;

@@ -1,6 +1,6 @@
 import Schema from '../BaseSchema';
 
-var ClassSchema = (Schema.patterns.ClassSchema = Schema.extend({
+var ClassSchema = Schema.extend({
   initialize: function(constructor) {
     this.constructor = constructor;
   },
@@ -30,7 +30,7 @@ var ClassSchema = (Schema.patterns.ClassSchema = Schema.extend({
   validate: function(instance) {
     return instance instanceof this.constructor;
   }
-}));
+});
 
 export default ClassSchema;
 
